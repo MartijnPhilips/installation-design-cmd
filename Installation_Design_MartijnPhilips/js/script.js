@@ -1,6 +1,7 @@
 const GRID_SIZE = 16;
 
 let isDrawing = false;
+let activePointerId = null;
 
 const ERASER = "eraser";
 const colors = [
@@ -67,19 +68,24 @@ for(let y=0;y<GRID_SIZE;y++){
         pixel.dataset.y = y;
         pixel.dataset.color = "";
 
-        pixel.addEventListener("pointerdown", e => {
+        pixel.addEventListener("pointerdown", (e) => {
 
-            isDrawing = true;
+            activePointerId = e.pointerId;
+
+            pixel.setPointerCapture(e.pointerId);
 
             paintPixel(pixel);
-
             e.preventDefault();
         });
 
-        pixel.addEventListener("pointerenter", () => {
+        pixel.addEventListener("pointermove", (e) => {
 
-            if(isDrawing){
-                paintPixel(pixel);
+            if (activePointerId !== e.pointerId) return;
+
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+
+            if (el && el.classList.contains("pixel")) {
+                paintPixel(el);
             }
         });
 
@@ -234,10 +240,15 @@ exportBtn.addEventListener("click", () => {
     link.click();
 });
 
-document.addEventListener("pointerup", () => {
+document.addEventListener("pointerup", (e) => {
+    activePointerId = null;
     isDrawing = false;
 });
 
+document.addEventListener("pointercancel", () => {
+    activePointerId = null;
+    isDrawing = false;
+});
 function paintPixel(pixel){
 
     if(selectedColor === ERASER){
